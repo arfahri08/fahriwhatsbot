@@ -1,35 +1,41 @@
 /**
- * Adds a command to check if the bot is alive.
+ * Menambahkan perintah untuk mengecek apakah bot sedang aktif.
  *
- * @param {Object} command - The command object.
- * @param {string} command.pattern - The regex pattern to match the command.
- * @param {boolean} command.fromMe - Whether the command should be from the bot owner.
- * @param {string} command.desc - The description of the command.
- * @param {Function} callback - The callback function to execute when the command is matched.
- * @param {Object} msg - The message object.
- * @param {Object} msg.key - The key object of the message.
- * @param {string} msg.key.remoteJid - The remote JID of the group or user.
- * @param {Object} match - The match object.
- * @param {Object} sock - The socket object for sending messages.
- * @returns {Promise<void>} - A promise that resolves when the message is sent.
+ * @param {Object} command - Objek perintah.
+ * @param {string} command.pattern - Pola regex untuk mencocokkan perintah.
+ * @param {boolean} command.fromMe - Apakah perintah harus dari pemilik bot.
+ * @param {string} command.desc - Deskripsi perintah.
+ * @param {Function} callback - Fungsi callback yang dijalankan saat perintah cocok.
+ * @param {Object} msg - Objek pesan.
+ * @param {Object} msg.key - Objek kunci dari pesan.
+ * @param {string} msg.key.remoteJid - JID remote dari grup atau pengguna.
+ * @param {Object} match - Objek hasil pencocokan.
+ * @param {Object} sock - Objek socket untuk mengirim pesan.
+ * @returns {Promise<void>} - Promise yang selesai saat pesan terkirim.
 */
 
 const fs = require('fs');
 
-addCommand({ pattern: "^alive$", access: "all", desc: "_Check if the bot is alive._" }, async (msg, match, sock, rawMessage) => {
+addCommand({ pattern: "^alive$", access: "all", desc: "_Cek apakah bot sedang aktif._" }, async (msg, match, sock, rawMessage) => {
     const grupId = msg.key.remoteJid;
     const aliveMessage = global.database.aliveMessage;
     const mediaPath = `./alive.${aliveMessage.type}`;
+
+    // Menambahkan identitas ke konten jika kosong
+    let content = aliveMessage.content;
+    if (content === "") {
+        content = "Halo! **USERBOT Fahri** siap melayani. Saya sedang aktif sekarang! 🚀";
+    }
 
     if (aliveMessage.type === "text") {
         if (msg.key.fromMe) {
             return await sock.sendMessage(grupId, {
                 edit: msg.key,
-                text: aliveMessage.content
+                text: content
             });
         } else {
             return await sock.sendMessage(grupId, {
-                text: aliveMessage.content
+                text: content
             }, { quoted: rawMessage.messages[0] });
         }
     }
@@ -46,7 +52,7 @@ addCommand({ pattern: "^alive$", access: "all", desc: "_Check if the bot is aliv
 
     const messageOptions = {
         [aliveMessage.type]: { url: mediaPath },
-        caption: aliveMessage.content == "" ? undefined : aliveMessage.content
+        caption: content
     };
 
     return await sock.sendMessage(grupId, messageOptions, { quoted: rawMessage.messages[0] });
